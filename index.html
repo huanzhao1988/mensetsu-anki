@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="面接暗記">
+<meta name="robots" content="noindex">
+<title>面接暗記カード</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column sized for a phone held in one hand; controls on top, the sentence card is the hero. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --ink:#1b2430; --muted:#5d6878; --line:#d9dfe7;
+  --accent:#2f5d9e; --accent-soft:#e3ecf8; --hide:#c9d6ea; --ok:#2e7d5b;
+  --f-display:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161d; --surface:#1a212b; --ink:#e7ecf2; --muted:#9aa6b6; --line:#2c3644;
+  --accent:#8fb4ec; --accent-soft:#22324a; --hide:#33465f; --ok:#6cc39a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161d; --surface:#1a212b; --ink:#e7ecf2; --muted:#9aa6b6; --line:#2c3644;
+  --accent:#8fb4ec; --accent-soft:#22324a; --hide:#33465f; --ok:#6cc39a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 40px}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font-family:var(--f-display);font-size:1.35rem;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:.85rem;margin:0}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{font:inherit;font-family:var(--f-display);font-weight:700;border:0;border-radius:9px;padding:10px 6px;background:transparent;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.modes{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tool{font:inherit;font-size:.85rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:7px 12px;cursor:pointer}
+.tool:focus-visible,.chip:focus-visible,.seg button:focus-visible,.blank:focus-visible,.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label.tg{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted)}
+.hint{font-size:.8rem;color:var(--muted);margin:0}
+ol.sents{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+ol.sents li{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px}
+.no{font-family:var(--f-display);font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.9}
+.jp{font-size:1.05rem;min-width:0}
+.kw{grid-column:2;font-size:.78rem;color:var(--muted)}
+.zh{grid-column:2;font-size:.85rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:4px}
+.blank{display:inline;border:0;font:inherit;color:transparent;background:var(--hide);border-radius:4px;padding:0 2px;cursor:pointer}
+.blank.open{color:var(--accent);background:var(--accent-soft);font-weight:700}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 18px;min-height:220px;display:flex;flex-direction:column;gap:12px;cursor:pointer}
+.card .pos{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.card .big{font-size:1.2rem;line-height:1.8}
+.card .cue{font-family:var(--f-display);font-size:1.05rem;color:var(--accent)}
+.card .tap{font-size:.8rem;color:var(--muted);margin-top:auto}
+.nav{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nav .tool{padding:12px;font-weight:700}
+.timer{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.clock{font-family:var(--f-display);font-size:1.5rem;font-variant-numeric:tabular-nums;min-width:4.5ch}
+.clock.done{color:var(--ok)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px}
+summary{cursor:pointer;font-weight:700}
+details p,details li{font-size:.88rem}
+@media (prefers-reduced-motion: no-preference){.blank{transition:background .15s,color .15s}}
+</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>面接暗記カード</h1>
+    <p class="sub">自己PR（先生修正版）と志望動機（簡潔版）を、スマホで覚えるためのページ</p>
+  </header>
+
+  <div class="seg" role="group" aria-label="原稿">
+    <button id="tab-pr" data-doc="pr">自己PR</button>
+    <button id="tab-sb" data-doc="sb">志望動機</button>
+  </div>
+
+  <div class="modes" role="group" aria-label="練習モード">
+    <button class="chip" id="m-read" data-mode="read">① 全文を読む</button>
+    <button class="chip" id="m-card" data-mode="card">② 一文ずつ</button>
+    <button class="chip" id="m-cloze" data-mode="cloze">③ 穴埋め</button>
+    <button class="chip" id="m-head" data-mode="head">④ 頭文字だけ</button>
+  </div>
+
+  <div class="row">
+    <label class="tg"><input type="checkbox" id="opt-zh"> 中文を表示</label>
+    <label class="tg"><input type="checkbox" id="opt-kw" checked> キーワード</label>
+    <button class="tool" id="btn-speak">🔊 読み上げ</button>
+    <select class="tool" id="opt-rate" aria-label="読み上げ速度">
+      <option value="0.8">ゆっくり</option><option value="1" selected>ふつう</option>
+    </select>
+  </div>
+  <p class="hint" id="modehint"></p>
+
+  <section id="view" aria-live="polite"></section>
+
+  <div class="timer">
+    <span class="clock" id="clock">0:00</span>
+    <span class="hint" id="target"></span>
+    <span class="row" style="margin-left:auto">
+      <button class="tool" id="t-start">話す練習スタート</button>
+      <button class="tool" id="t-reset">リセット</button>
+    </span>
+  </div>
+
+  <details>
+    <summary>覚え方のおすすめ（5日間）</summary>
+    <ol>
+      <li>1日目：①でキーワードの順番だけ覚える。🔊を聞きながら声に出して読む。</li>
+      <li>2日目：②で、キーワードを見て一文を言ってから、タップして答え合わせ。</li>
+      <li>3日目：③の穴埋め。空欄を言えたらタップ。</li>
+      <li>4日目：④の頭文字だけで最後まで話す。タイマーで時間を計る。</li>
+      <li>5日目：画面を見ずに話して、iPhoneのボイスメモで録音して聞き直す。</li>
+    </ol>
+    <p>一字一句同じでなくて大丈夫です。キーワードの順番どおりに話せれば合格です。</p>
+  </details>
+</div>
+
+<script>
+const DOCS={
+ pr:{name:"自己PR",sec:40,s:[
+  {t:"私の強みは、{相手の要望を聞き取って整理}し、{調整しながら物事を進める力}です。",k:"強み＝聞き取る・整理・調整",z:"我的强项是倾听并整理对方的需求，一边协调一边推进事情的能力。"},
+  {t:"専門学校に入学する前は、企業で{マーケティングのマネージャーや主任}として{チームをまとめました}。",k:"入学前：マネージャー・主任／チーム",z:"进入专门学校之前，我在企业担任市场经理和主管，带领团队。"},
+  {t:"企業でチームをまとめた経験を、{世の中を支えるITの仕組みづくり}に役立てていきたいと思っています。",k:"チームの経験 → ITの仕組みづくり",z:"我想把在企业带领团队的经验，用在打造支撑社会的IT机制上。"},
+  {t:"現在は専門学校で{ITの知識}を学び、{多くの経験を積み重ねて}います。",k:"現在：ITの知識・経験",z:"现在我在专门学校学习IT知识，不断积累经验。"},
+  {t:"入社後は、{マネージャーの経験を活かして}、{利用者の要望に応えて}いきたいです。",k:"入社後：経験を活かす → 要望に応える",z:"入职后，我想发挥当经理的经验，回应使用者的需求。"}
+ ]},
+ sb:{name:"志望動機",sec:50,s:[
+  {t:"私がITエンジニアを志望している理由は、{仕事をより効率化できる便利なシステム}を提供したいと考えているからです。",k:"理由：効率化できる便利なシステム",z:"我希望成为IT工程师，是因为想提供能让工作更高效、使用便利的系统。"},
+  {t:"前職では、{中国の自動車販売店}で{マーケティングのマネージャー}を担当していました。",k:"前職：自動車販売店・マネージャー",z:"在前一份工作中，我在中国的汽车经销店担任市场经理。"},
+  {t:"業務で使っていたシステムから、{もっと効率的にできる}のではないかと感じるようになりました。",k:"気づき：もっと効率的にできる",z:"从工作中使用的系统里，我渐渐感到还能做得更高效。"},
+  {t:"これまではシステムを{使う立場}でしたが、今後は{作る立場}から業務の効率化に関わりたいと考えています。",k:"使う立場 → 作る立場",z:"以前我一直是使用系统的一方，今后想站在开发系统的立场，参与提升业务效率。"},
+  {t:"現在は専門学校で{ITの知識}を学んでいます。",k:"現在：ITの知識",z:"现在我在专门学校学习IT知识。"},
+  {t:"入社後は、{前職の経験を活かして}、{利用者が使いやすいシステム}を提供したいです。",k:"入社後：経験を活かす → 使いやすいシステム",z:"入职后，我想发挥前一份工作的经验，提供使用者觉得好用的系统。"}
+ ]}
+};
+const HINTS={read:"全文とキーワード。まず順番をつかみます。",card:"キーワードを見て一文を言ってから、カードをタップして答え合わせ。",cloze:"灰色の空欄を言えたら、タップして確認。",head:"最初の3文字だけ。続きを自分で言ってみましょう。"};
+const st={doc:"pr",mode:"read",i:0,open:false,zh:false,kw:true};
+try{Object.assign(st,JSON.parse(localStorage.getItem("anki-st")||"{}"));}catch(e){}
+const save=()=>{try{localStorage.setItem("anki-st",JSON.stringify({doc:st.doc,mode:st.mode,zh:st.zh,kw:st.kw}))}catch(e){}};
+const plain=t=>t.replace(/[{}]/g,"");
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const view=document.getElementById("view");
+
+function render(){
+  const D=DOCS[st.doc];
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.doc===st.doc));
+  document.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===st.mode));
+  document.getElementById("opt-zh").checked=st.zh;
+  document.getElementById("opt-kw").checked=st.kw;
+  document.getElementById("modehint").textContent=HINTS[st.mode];
+  const chars=D.s.reduce((n,x)=>n+plain(x.t).length,0);
+  document.getElementById("target").textContent=`${chars}字・目安 約${D.sec}秒`;
+  if(st.mode==="card"){
+    if(st.i>=D.s.length) st.i=0;
+    const x=D.s[st.i];
+    view.innerHTML=`<div class="card" id="card" tabindex="0" role="button" aria-label="タップで答えを表示">
+      <span class="pos">${st.i+1} / ${D.s.length}</span>
+      <span class="cue">${esc(x.k)}</span>
+      ${st.open?`<span class="big">${esc(plain(x.t))}</span>${st.zh?`<span class="hint">${esc(x.z)}</span>`:""}`:`<span class="big" style="color:var(--muted)">この文を声に出して言ってみましょう</span>`}
+      <span class="tap">${st.open?"もう一度タップで隠す":"タップで答えを表示"}</span></div>
+      <div class="nav" style="margin-top:10px"><button class="tool" id="prev">← 前の文</button><button class="tool" id="next">次の文 →</button></div>`;
+    const card=document.getElementById("card");
+    const flip=()=>{st.open=!st.open;render()};
+    card.onclick=flip; card.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();flip()}};
+    document.getElementById("prev").onclick=()=>{st.i=(st.i-1+D.s.length)%D.s.length;st.open=false;render()};
+    document.getElementById("next").onclick=()=>{st.i=(st.i+1)%D.s.length;st.open=false;render()};
+    return;
+  }
+  const items=D.s.map((x,n)=>{
+    let jp;
+    if(st.mode==="cloze") jp=esc(x.t).replace(/\{([^}]+)\}/g,(m,a)=>`<button class="blank" aria-label="空欄">${a}</button>`);
+    else if(st.mode==="head") jp=esc(plain(x.t).slice(0,3))+"……";
+    else jp=esc(plain(x.t));
+    return `<li><span class="no">${n+1}</span><span class="jp">${jp}</span>${st.kw?`<span class="kw">${esc(x.k)}</span>`:""}${st.zh?`<span class="zh">${esc(x.z)}</span>`:""}</li>`;
+  }).join("");
+  view.innerHTML=`<ol class="sents">${items}</ol>`;
+  view.querySelectorAll(".blank").forEach(b=>b.onclick=()=>b.classList.toggle("open"));
+}
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{st.doc=b.dataset.doc;st.i=0;st.open=false;stopSpeak();save();render()});
+document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{st.mode=b.dataset.mode;st.i=0;st.open=false;save();render()});
+document.getElementById("opt-zh").onchange=e=>{st.zh=e.target.checked;save();render()};
+document.getElementById("opt-kw").onchange=e=>{st.kw=e.target.checked;save();render()};
+
+/* 読み上げ（端末の音声合成。使えない端末ではボタンが案内を出す） */
+const sp=document.getElementById("btn-speak");
+function stopSpeak(){try{speechSynthesis.cancel()}catch(e){} sp.textContent="🔊 読み上げ"}
+sp.onclick=()=>{
+  if(!("speechSynthesis" in window)){sp.textContent="この画面では読み上げ不可";return}
+  if(speechSynthesis.speaking){stopSpeak();return}
+  const D=DOCS[st.doc];
+  const text=st.mode==="card"?plain(D.s[st.i].t):D.s.map(x=>plain(x.t)).join("");
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="ja-JP"; u.rate=parseFloat(document.getElementById("opt-rate").value);
+  const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.startsWith("ja")); if(v) u.voice=v;
+  u.onend=stopSpeak; u.onerror=stopSpeak;
+  speechSynthesis.speak(u); sp.textContent="■ 停止";
+};
+
+/* 話す練習タイマー */
+let t0=0,tid=null;
+const clock=document.getElementById("clock"),ts=document.getElementById("t-start");
+function tick(){const s=Math.floor((Date.now()-t0)/1000);clock.textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;clock.classList.toggle("done",s>=DOCS[st.doc].sec)}
+ts.onclick=()=>{if(tid){clearInterval(tid);tid=null;ts.textContent="話す練習スタート";return}t0=Date.now();tick();tid=setInterval(tick,250);ts.textContent="ストップ"};
+document.getElementById("t-reset").onclick=()=>{clearInterval(tid);tid=null;ts.textContent="話す練習スタート";clock.textContent="0:00";clock.classList.remove("done")};
+render();
+</script>
+</body>
+</html>
